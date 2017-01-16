@@ -21,6 +21,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.ext.auth.User;
 
+import java.util.concurrent.CompletionStage;
+
 /**
  * AccessToken extension to the User interface
  *
@@ -43,6 +45,12 @@ public interface AccessToken extends User {
   AccessToken refresh(Handler<AsyncResult<Void>> callback);
 
   /**
+   * Like {@link #refresh(Handler)} but returns a {@code CompletionStage} that will be
+   * completed with the result of the {@code callback}
+   */
+  CompletionStage<Void> refresh();
+
+  /**
    * Revoke access or refresh token
    *
    * @param token_type - A String containing the type of token to revoke. Should be either "access_token" or "refresh_token".
@@ -50,6 +58,12 @@ public interface AccessToken extends User {
    */
   @Fluent
   AccessToken revoke(String token_type, Handler<AsyncResult<Void>> callback);
+
+  /**
+   * Like {@link #revoke(String, Handler)} but returns a {@code CompletionStage} that will be
+   * completed with the result of the {@code callback}
+   */
+  CompletionStage<Void> revoke(String token_type);
 
   /**
    * Revoke refresh token and calls the logout endpoint. This is a openid-connect extension and might not be
@@ -61,10 +75,22 @@ public interface AccessToken extends User {
   AccessToken logout(Handler<AsyncResult<Void>> callback);
 
   /**
+   * Like {@link #logout(Handler)} but returns a {@code CompletionStage} that will be
+   * completed with the result of the {@code callback}
+   */
+  CompletionStage<Void> logout();
+
+  /**
    * Introspect access token. This is an OAuth2 extension that allow to verify if an access token is still valid.
    *
    * @param callback - The callback function returning the results.
    */
   @Fluent
   AccessToken introspect(Handler<AsyncResult<Void>> callback);
+
+  /**
+   * Like {@link #introspect(Handler)} but returns a {@code CompletionStage} that will be
+   * completed with the result of the {@code callback}
+   */
+  CompletionStage<Void> introspect();
 }

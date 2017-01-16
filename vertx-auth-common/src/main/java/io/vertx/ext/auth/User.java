@@ -21,6 +21,9 @@ import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.spi.concurrent.CompletableStage;
+
+import java.util.concurrent.CompletionStage;
 
 /**
  * Represents an authenticates User and contains operations to authorise the user.
@@ -44,6 +47,16 @@ public interface User {
    */
   @Fluent
   User isAuthorised(String authority, Handler<AsyncResult<Boolean>> resultHandler);
+
+  /**
+   * Like {@link #isAuthorised(String, Handler)} but returns a {@code CompletionStage} that will be
+   * completed with the result of the {@code resultHandler}
+   */
+  default CompletionStage<Boolean> isAuthorised(String authority) {
+    CompletableStage<Boolean> fut = CompletableStage.create();
+    isAuthorised(authority, fut);
+    return fut;
+  }
 
   /**
    * The User object will cache any authorities that it knows it has to avoid hitting the

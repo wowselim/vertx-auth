@@ -1,16 +1,16 @@
 /*
  * Copyright 2014 Red Hat, Inc.
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Apache License v2.0 which accompanies this distribution.
- * 
+ *
  * The Eclipse Public License is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * The Apache License v2.0 is available at
  * http://www.opensource.org/licenses/apache2.0.php
- * 
+ *
  * You may elect to redistribute this code under either of these licenses.
  */
 
@@ -23,6 +23,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.spi.concurrent.CompletableStage;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.mongo.AuthenticationException;
 import io.vertx.ext.auth.mongo.HashStrategy;
@@ -31,10 +32,11 @@ import io.vertx.ext.auth.mongo.MongoAuth;
 import io.vertx.ext.mongo.MongoClient;
 
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 
 /**
  * An implementation of {@link MongoAuth}
- * 
+ *
  * @author mremme
  */
 public class MongoAuthImpl implements MongoAuth {
@@ -55,7 +57,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /**
    * Creates a new instance
-   * 
+   *
    * @param mongoClient
    *          the {@link MongoClient} to be used
    * @param config
@@ -105,7 +107,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /**
    * The default implementation uses the usernameField as search field
-   * 
+   *
    * @param username
    * @return
    */
@@ -115,7 +117,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /**
    * Examine the selection of found users and return one, if password is fitting,
-   * 
+   *
    * @param resultList
    * @param authToken
    * @return
@@ -151,7 +153,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#insertUser(java.lang.String, java.lang.String, java.util.List,
    * java.util.List, io.vertx.core.Handler)
    */
@@ -180,9 +182,16 @@ public class MongoAuthImpl implements MongoAuth {
     mongoClient.save(getCollectionName(), user.principal(), resultHandler);
   }
 
+  @Override
+  public CompletionStage<String> insertUser(String username, String password, List<String> roles, List<String> permissions) {
+    CompletableStage<String> fut = CompletableStage.create();
+    insertUser(username, password, roles, permissions, fut);
+    return fut;
+  }
+
   /**
    * Examine the given user object. Returns true, if object fits the given authentication
-   * 
+   *
    * @param user
    * @param authToken
    * @return
@@ -247,7 +256,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#setCollectionName(java.lang.String)
    */
   @Override
@@ -258,7 +267,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#setUsernameField(java.lang.String)
    */
   @Override
@@ -269,7 +278,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#setPasswordField(java.lang.String)
    */
   @Override
@@ -280,7 +289,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#setRoleField(java.lang.String)
    */
   @Override
@@ -291,7 +300,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#setUsernameCredentialField(java.lang. String)
    */
   @Override
@@ -302,7 +311,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#setPasswordCredentialField(java.lang. String)
    */
   @Override
@@ -313,7 +322,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#setSaltField(java.lang.String)
    */
   @Override
@@ -324,7 +333,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#getCollectionName()
    */
   @Override
@@ -334,7 +343,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#getUsernameField()
    */
   @Override
@@ -344,7 +353,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#getPasswordField()
    */
   @Override
@@ -354,7 +363,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#getRoleField()
    */
   @Override
@@ -364,7 +373,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#getUsernameCredentialField()
    */
   @Override
@@ -374,7 +383,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#getPasswordCredentialField()
    */
   @Override
@@ -384,7 +393,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#getSaltField()
    */
   @Override
@@ -394,7 +403,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#setPermissionField(java.lang.String)
    */
   @Override
@@ -405,7 +414,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#getPermissionField()
    */
   @Override
@@ -415,7 +424,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#setHashStrategy(io.vertx.ext.auth.mongo.HashStrategy)
    */
   @Override
@@ -426,7 +435,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see io.vertx.ext.auth.mongo.MongoAuth#getHashStrategy()
    */
   @Override
@@ -438,7 +447,7 @@ public class MongoAuthImpl implements MongoAuth {
 
   /**
    * The incoming data from an authentication request
-   * 
+   *
    * @author mremme
    */
   static class AuthToken {

@@ -20,6 +20,9 @@ import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.spi.concurrent.CompletableStage;
+
+import java.util.concurrent.CompletionStage;
 
 /**
  *
@@ -52,4 +55,13 @@ public interface AuthProvider {
    */
   void authenticate(JsonObject authInfo, Handler<AsyncResult<User>> resultHandler);
 
+  /**
+   * Like {@link #authenticate(JsonObject, Handler)} but returns a {@code CompletionStage} that will be
+   * completed with the result of the {@code resultHandler}
+   */
+  default CompletionStage<User> authenticate(JsonObject authInfo) {
+    CompletableStage<User> fut = CompletableStage.create();
+    authenticate(authInfo, fut);
+    return fut;
+  }
 }

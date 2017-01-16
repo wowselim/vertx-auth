@@ -24,12 +24,14 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.spi.concurrent.CompletableStage;
 import io.vertx.ext.auth.AbstractUser;
 import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.auth.oauth2.AccessToken;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.concurrent.CompletionStage;
 import java.util.regex.Pattern;
 
 import static io.vertx.ext.auth.oauth2.impl.OAuth2API.api;
@@ -206,6 +208,13 @@ public class AccessTokenImpl extends AbstractUser implements AccessToken {
     return this;
   }
 
+  @Override
+  public CompletionStage<Void> refresh() {
+    CompletableStage<Void> fut = CompletableStage.create();
+    refresh(fut);
+    return fut;
+  }
+
   /**
    * Revoke access or refresh token
    *
@@ -244,6 +253,13 @@ public class AccessTokenImpl extends AbstractUser implements AccessToken {
     return this;
   }
 
+  @Override
+  public CompletionStage<Void> revoke(String token_type) {
+    CompletableStage<Void> fut = CompletableStage.create();
+    revoke(token_type, fut);
+    return fut;
+  }
+
   /**
    * Revoke refresh token and calls the logout endpoint
    *
@@ -270,6 +286,13 @@ public class AccessTokenImpl extends AbstractUser implements AccessToken {
     });
 
     return this;
+  }
+
+  @Override
+  public CompletionStage<Void> logout() {
+    CompletableStage<Void> fut = CompletableStage.create();
+    logout(fut);
+    return fut;
   }
 
   @Override
@@ -317,6 +340,13 @@ public class AccessTokenImpl extends AbstractUser implements AccessToken {
     });
 
     return this;
+  }
+
+  @Override
+  public CompletionStage<Void> introspect() {
+    CompletableStage<Void> fut = CompletableStage.create();
+    introspect(fut);
+    return fut;
   }
 
   /**

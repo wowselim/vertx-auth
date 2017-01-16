@@ -45,7 +45,7 @@ module VertxAuthMongo
     end
     #  Creates an instance of MongoAuth by using the given  and configuration object. An example for a
     #  configuration object:
-    #  
+    # 
     #  <pre>
     #  JsonObject js = new JsonObject();
     #  js.put(MongoAuth.PROPERTY_COLLECTION_NAME, createCollectionName(MongoAuth.DEFAULT_COLLECTION_NAME));

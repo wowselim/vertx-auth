@@ -27,6 +27,8 @@ import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.oauth2.impl.OAuth2AuthProviderImpl;
 
+import java.util.concurrent.CompletionStage;
+
 /**
  * Factory interface for creating OAuth2 based {@link io.vertx.ext.auth.AuthProvider} instances.
  *
@@ -119,6 +121,12 @@ public interface OAuth2Auth extends AuthProvider {
   void getToken(JsonObject params, Handler<AsyncResult<AccessToken>> handler);
 
   /**
+   * Like {@link #getToken(JsonObject, Handler)} but returns a {@code CompletionStage} that will be
+   * completed with the result of the {@code handler}
+   */
+  CompletionStage<AccessToken> getToken(JsonObject params);
+
+  /**
    * Call OAuth2 APIs.
    *
    * @param method HttpMethod
@@ -129,6 +137,12 @@ public interface OAuth2Auth extends AuthProvider {
    */
   @Fluent
   OAuth2Auth api(HttpMethod method, String path, JsonObject params, Handler<AsyncResult<JsonObject>> handler);
+
+  /**
+   * Like {@link #api(HttpMethod, String, JsonObject, Handler)} but returns a {@code CompletionStage} that will be
+   * completed with the result of the {@code handler}
+   */
+  CompletionStage<JsonObject> api(HttpMethod method, String path, JsonObject params);
 
   /**
    * Returns true if this provider supports JWT tokens as the access_token. This is typically true if the provider
@@ -156,6 +170,12 @@ public interface OAuth2Auth extends AuthProvider {
   OAuth2Auth decodeToken(String token, Handler<AsyncResult<AccessToken>> handler);
 
   /**
+   * Like {@link #decodeToken(String, Handler)} but returns a {@code CompletionStage} that will be
+   * completed with the result of the {@code handler}
+   */
+  CompletionStage<AccessToken> decodeToken(String token);
+
+  /**
    * Query an OAuth 2.0 authorization server to determine the active state of an OAuth 2.0 token and to determine
    * meta-information about this token.
    *
@@ -165,6 +185,12 @@ public interface OAuth2Auth extends AuthProvider {
    */
   @Fluent
   OAuth2Auth introspectToken(String token, Handler<AsyncResult<AccessToken>> handler);
+
+  /**
+   * Like {@link #introspectToken(String, Handler)} but returns a {@code CompletionStage} that will be
+   * completed with the result of the {@code callback}
+   */
+  CompletionStage<AccessToken> introspectToken(String token);
 
   /**
    * Query an OAuth 2.0 authorization server to determine the active state of an OAuth 2.0 token and to determine
@@ -177,6 +203,12 @@ public interface OAuth2Auth extends AuthProvider {
    */
   @Fluent
   OAuth2Auth introspectToken(String token, String tokenType, Handler<AsyncResult<JsonObject>> handler);
+
+  /**
+   * Like {@link #introspectToken(String, String, Handler)} but returns a {@code CompletionStage} that will be
+   * completed with the result of the {@code handler}
+   */
+  CompletionStage<JsonObject> introspectToken(String token, String tokenType);
 
   /**
    * Returns the scope separator.

@@ -21,10 +21,13 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.spi.concurrent.CompletableStage;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.jwt.JWT;
 import io.vertx.ext.auth.oauth2.*;
 import io.vertx.ext.auth.oauth2.impl.flow.*;
+
+import java.util.concurrent.CompletionStage;
 
 /**
  * @author Paulo Lopes
@@ -95,9 +98,23 @@ public class OAuth2AuthProviderImpl implements OAuth2Auth {
   }
 
   @Override
+  public CompletionStage<AccessToken> getToken(JsonObject params) {
+    CompletableStage<AccessToken> fut = CompletableStage.create();
+    getToken(params, fut);
+    return fut;
+  }
+
+  @Override
   public OAuth2Auth api(HttpMethod method, String path, JsonObject params, Handler<AsyncResult<JsonObject>> handler) {
     OAuth2API.api(this, method, path, params, handler);
     return this;
+  }
+
+  @Override
+  public CompletionStage<JsonObject> api(HttpMethod method, String path, JsonObject params) {
+    CompletableStage<JsonObject> fut = CompletableStage.create();
+    api(method, path, params);
+    return fut;
   }
 
   @Override
@@ -117,6 +134,13 @@ public class OAuth2AuthProviderImpl implements OAuth2Auth {
       }
     }
     return this;
+  }
+
+  @Override
+  public CompletionStage<AccessToken> decodeToken(String token) {
+    CompletableStage<AccessToken> fut = CompletableStage.create();
+    decodeToken(token, fut);
+    return fut;
   }
 
   @Override
@@ -148,9 +172,23 @@ public class OAuth2AuthProviderImpl implements OAuth2Auth {
   }
 
   @Override
+  public CompletionStage<AccessToken> introspectToken(String token) {
+    CompletableStage<AccessToken> fut = CompletableStage.create();
+    introspectToken(token, fut);
+    return fut;
+  }
+
+  @Override
   public OAuth2Auth introspectToken(String token, String tokenType, Handler<AsyncResult<JsonObject>> handler) {
     flow.introspectToken(token, tokenType, handler);
     return this;
+  }
+
+  @Override
+  public CompletionStage<JsonObject> introspectToken(String token, String tokenType) {
+    CompletableStage<JsonObject> fut = CompletableStage.create();
+    introspectToken(token, tokenType, fut);
+    return fut;
   }
 
   @Override
