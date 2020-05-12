@@ -25,8 +25,12 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.ldap.LdapAuthentication;
 import io.vertx.ext.auth.ldap.LdapAuthenticationOptions;
+
+import static io.vertx.ext.auth.impl.AuthInfoUtil.getNonEmpty;
+import static io.vertx.ext.auth.impl.AuthInfoUtil.getNonNull;
 
 /**
  *
@@ -45,18 +49,23 @@ public class LdapAuthenticationImpl implements LdapAuthentication {
   }
 
   @Override
-  public void authenticate(JsonObject authInfo, Handler<AsyncResult<io.vertx.ext.auth.User>> resultHandler) {
-    String principal = authInfo.getString("username");
-    String credential = authInfo.getString("password");
-    String ldapPrincipal = getLdapPrincipal(principal);
-    createLdapContext(ldapPrincipal, credential, contextResponse -> {
-      if (contextResponse.succeeded()) {
-        User user = User.create(new JsonObject().put("username", principal));
-        resultHandler.handle(Future.succeededFuture(user));
-      } else {
-        resultHandler.handle(Future.failedFuture(contextResponse.cause()));
-      }
-    });
+  public void authenticate(JsonObject authInfo, Handler<AsyncResult<User>> resultHandler) {
+    try {
+      String principal = getNonEmpty(authInfo, "username");
+      String credential = getNonNull(authInfo, "password");
+
+      String ldapPrincipal = getLdapPrincipal(principal);
+      createLdapContext(ldapPrincipal, credential, contextResponse -> {
+        if (contextResponse.succeeded()) {
+          User user = User.create(new JsonObject().put("username", principal));
+          resultHandler.handle(Future.succeededFuture(user));
+        } else {
+          resultHandler.handle(Future.failedFuture(contextResponse.cause()));
+        }
+      });
+    } catch (InvalidAuthInfoException e) {
+      resultHandler.handle(Future.failedFuture(e));
+    }
   }
 
   private void createLdapContext(String principal, String credential, Handler<AsyncResult<LdapContext>> resultHandler) {

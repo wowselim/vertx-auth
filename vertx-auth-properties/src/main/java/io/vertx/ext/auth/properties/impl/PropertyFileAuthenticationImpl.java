@@ -17,6 +17,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.authorization.Authorization;
 import io.vertx.ext.auth.authorization.RoleBasedAuthorization;
 import io.vertx.ext.auth.authorization.WildcardPermissionBasedAuthorization;
@@ -27,6 +28,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static io.vertx.ext.auth.impl.AuthInfoUtil.getNonEmpty;
+import static io.vertx.ext.auth.impl.AuthInfoUtil.getNonNull;
 
 /**
  * @author <a href="mail://stephane.bastian.dev@gmail.com">Stephane Bastian</a>
@@ -65,8 +69,8 @@ public class PropertyFileAuthenticationImpl implements PropertyFileAuthenticatio
     }
   }
 
-  private Vertx vertx;
-  private String path;
+  private final Vertx vertx;
+  private final String path;
   private Map<String, User> users;
   private Map<String, Role> roles;
 
@@ -156,20 +160,25 @@ public class PropertyFileAuthenticationImpl implements PropertyFileAuthenticatio
 
   @Override
   public void authenticate(JsonObject authInfo, Handler<AsyncResult<io.vertx.ext.auth.User>> resultHandler) {
-    String username = authInfo.getString("username");
-    String password = authInfo.getString("password");
-    getUser(username, userResult -> {
-      if (userResult.succeeded()) {
-        User propertyUser = userResult.result();
-        if (Objects.equals(propertyUser.password, password)) {
-          resultHandler.handle(Future.succeededFuture(io.vertx.ext.auth.User.create(new JsonObject().put("username", propertyUser.name))));
+    try {
+      String username = getNonEmpty(authInfo, "username");
+      String password = getNonNull(authInfo, "password");
+
+      getUser(username, userResult -> {
+        if (userResult.succeeded()) {
+          User propertyUser = userResult.result();
+          if (Objects.equals(propertyUser.password, password)) {
+            resultHandler.handle(Future.succeededFuture(io.vertx.ext.auth.User.create(new JsonObject().put("username", propertyUser.name))));
+          } else {
+            resultHandler.handle(Future.failedFuture("invalid username/password"));
+          }
         } else {
           resultHandler.handle(Future.failedFuture("invalid username/password"));
         }
-      } else {
-        resultHandler.handle(Future.failedFuture("invalid username/password"));
-      }
-    });
+      });
+    } catch (InvalidAuthInfoException e) {
+      resultHandler.handle(Future.failedFuture(e));
+    }
   }
 
   @Override

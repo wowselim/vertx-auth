@@ -1,6 +1,7 @@
 package io.vertx.ext.auth.htpasswd;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.authorization.PermissionBasedAuthorization;
 import io.vertx.test.core.VertxTestBase;
 import org.junit.Ignore;
@@ -102,4 +103,18 @@ public class HtpasswdAuthTest extends VertxTestBase {
     }));
     await();
   }
+
+  @Test
+  public void testInvalid() {
+    JsonObject authInfo = new JsonObject()
+      .put("password", "myPassword");
+
+    authProviderCrypt.authenticate(authInfo, onFailure(res -> {
+      assertNotNull(res);
+      assertTrue(res instanceof InvalidAuthInfoException);
+      testComplete();
+    }));
+    await();
+  }
+
 }

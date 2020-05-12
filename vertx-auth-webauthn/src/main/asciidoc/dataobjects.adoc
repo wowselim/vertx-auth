@@ -13,8 +13,8 @@
 |[[name]]`@name`|`String`|-
 |===
 
-[[WebAuthnInfo]]
-== WebAuthnInfo
+[[WebAuthnAuthInfo]]
+== WebAuthnAuthInfo
 
 
 [cols=">25%,25%,50%"]
@@ -22,6 +22,7 @@
 |===
 ^|Name | Type ^| Description
 |[[challenge]]`@challenge`|`String`|-
+|[[empty]]`@empty`|`Boolean`|-
 |[[username]]`@username`|`String`|-
 |[[webauthn]]`@webauthn`|`Json object`|-
 |===

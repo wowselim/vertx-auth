@@ -18,6 +18,7 @@ package io.vertx.ext.auth.test.jwt;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.KeyStoreOptions;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.authorization.PermissionBasedAuthorization;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
@@ -70,6 +71,17 @@ public class JWTAuthProviderTest extends VertxTestBase {
     JsonObject authInfo = new JsonObject().put("jwt", JWT_INVALID);
     authProvider.authenticate(authInfo, onFailure(thr -> {
       assertNotNull(thr);
+      testComplete();
+    }));
+    await();
+  }
+
+  @Test
+  public void testInvalid() {
+    JsonObject authInfo = new JsonObject().put("jot", JWT_INVALID);
+    authProvider.authenticate(authInfo, onFailure(thr -> {
+      assertNotNull(thr);
+      assertTrue(thr instanceof InvalidAuthInfoException);
       testComplete();
     }));
     await();

@@ -19,6 +19,7 @@ package io.vertx.ext.auth.mongo.test;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.mongo.AuthenticationException;
 import io.vertx.ext.auth.mongo.MongoAuthentication;
 import io.vertx.ext.auth.mongo.MongoAuthenticationOptions;
@@ -87,6 +88,17 @@ public class MongoAuthenticationTest extends MongoBaseTest {
     authInfo.put(authenticationOptions.getUsernameField(), "tim").put(authenticationOptions.getPasswordField(), "sausages");
     getAuthenticationProvider().authenticate(authInfo, onSuccess(user -> {
       assertNotNull(user);
+      testComplete();
+    }));
+    await();
+  }
+
+  @Test
+  public void testInvalidAuthInfo() throws Exception {
+    JsonObject authInfo = new JsonObject();
+    getAuthenticationProvider().authenticate(authInfo, onFailure(thr -> {
+      assertNotNull(thr);
+      assertTrue(thr instanceof InvalidAuthInfoException);
       testComplete();
     }));
     await();

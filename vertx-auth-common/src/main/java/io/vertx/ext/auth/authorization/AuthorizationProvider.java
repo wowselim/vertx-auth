@@ -41,7 +41,7 @@ public interface AuthorizationProvider {
    * @return
    */
   static AuthorizationProvider create(String id, Set<Authorization> authorizations) {
-    Set<Authorization> _authorizations = new HashSet<>(Objects.requireNonNull(authorizations));
+    final Set<Authorization> _authorizations = new HashSet<>(Objects.requireNonNull(authorizations));
     return new AuthorizationProvider() {
 
       @Override

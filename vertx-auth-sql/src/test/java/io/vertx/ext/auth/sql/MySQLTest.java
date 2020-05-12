@@ -3,6 +3,7 @@ package io.vertx.ext.auth.sql;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.authentication.AuthenticationProvider;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.authorization.AuthorizationProvider;
 import io.vertx.ext.auth.authorization.PermissionBasedAuthorization;
 import io.vertx.ext.auth.authorization.RoleBasedAuthorization;
@@ -87,6 +88,23 @@ public class MySQLTest {
       should.assertTrue(authenticate.failed());
       should.assertNull(authenticate.result());
       should.assertEquals("Invalid username/password", authenticate.cause().getMessage());
+      test.complete();
+    });
+  }
+
+  @Test
+  public void testAuthenticateBadInput(TestContext should) {
+    final Async test = should.async();
+
+    AuthenticationProvider authn = SqlAuthentication.create(mysql);
+
+    JsonObject authInfo = new JsonObject();
+    authInfo.put("usuario", "lopus");
+
+    authn.authenticate(authInfo, authenticate -> {
+      should.assertTrue(authenticate.failed());
+      should.assertNull(authenticate.result());
+      should.assertTrue(authenticate.cause() instanceof InvalidAuthInfoException);
       test.complete();
     });
   }

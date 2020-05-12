@@ -18,6 +18,7 @@ package io.vertx.ext.auth.test.jdbc;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.jdbc.JDBCAuthentication;
 import io.vertx.ext.auth.jdbc.JDBCAuthenticationOptions;
 import io.vertx.ext.auth.jdbc.JDBCHashStrategy;
@@ -139,6 +140,18 @@ public class JDBCAuthenticationProviderTest extends VertxTestBase {
     authInfo.put("username", "tim").put("password", "sausages");
     getAuthenticationProvider().authenticate(authInfo, onSuccess(user -> {
       assertNotNull(user);
+      testComplete();
+    }));
+    await();
+  }
+
+  @Test
+  public void testInvalid() {
+    JsonObject authInfo = new JsonObject();
+    authInfo.put("password", "sausages");
+    getAuthenticationProvider().authenticate(authInfo, onFailure(err -> {
+      assertNotNull(err);
+      assertTrue(err instanceof InvalidAuthInfoException);
       testComplete();
     }));
     await();

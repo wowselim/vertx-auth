@@ -26,12 +26,16 @@ import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.User;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.oauth2.*;
 import io.vertx.ext.jwt.JWK;
 import io.vertx.ext.jwt.JWT;
 import io.vertx.ext.jwt.JWTOptions;
 
 import java.util.Collections;
+
+import static io.vertx.ext.auth.impl.AuthInfoUtil.getNonEmpty;
+import static io.vertx.ext.auth.impl.AuthInfoUtil.getNonNull;
 
 /**
  * @author Paulo Lopes
@@ -171,38 +175,33 @@ public class OAuth2AuthProviderImpl implements OAuth2Auth {
       // configured flow to retrieve a token for the user
       // depending on the flow type the authentication will behave in different ways
       final JsonObject params = new JsonObject();
-      switch (config.getFlow()) {
-        case PASSWORD:
-          if (authInfo.containsKey("username") && authInfo.containsKey("password")) {
+      try {
+        switch (config.getFlow()) {
+          case PASSWORD:
             params
-              .put("username", authInfo.getString("username"))
-              .put("password", authInfo.getString("password"));
-          } else {
-            // the auth info object is incomplete, we can't proceed from here
-            handler.handle(Future.failedFuture("PASSWORD flow requires {username, password}"));
-            return;
-          }
-          break;
-        case AUTH_CODE:
-          if (authInfo.containsKey("code") && authInfo.containsKey("redirect_uri")) {
+              .put("username", getNonEmpty(authInfo, "username"))
+              .put("password", getNonNull(authInfo, "password"));
+            break;
+          case AUTH_CODE:
+            getNonEmpty(authInfo, "code");
+            getNonEmpty(authInfo, "redirect_uri");
             params.mergeIn(authInfo);
-          } else {
-            // the auth info object is incomplete, we can't proceed from here
-            handler.handle(Future.failedFuture("AUTH_CODE flow requires {code, redirect_uri}"));
+            break;
+          case CLIENT:
+            params.mergeIn(authInfo);
+            break;
+          case AUTH_JWT:
+            params.mergeIn(authInfo);
+            params
+              .put("assertion", jwt.sign(authInfo, config.getJWTOptions()));
+            break;
+          default:
+            handler.handle(Future.failedFuture("Current flow does not allow acquiring a token by the relay party"));
             return;
-          }
-          break;
-        case CLIENT:
-          params.mergeIn(authInfo);
-          break;
-        case AUTH_JWT:
-          params.mergeIn(authInfo);
-          params
-            .put("assertion", jwt.sign(authInfo, config.getJWTOptions()));
-          break;
-        default:
-          handler.handle(Future.failedFuture("Current flow does not allow acquiring a token by the replay party"));
-          return;
+        }
+      } catch (InvalidAuthInfoException e) {
+        handler.handle(Future.failedFuture(e));
+        return;
       }
 
       api.token(config.getFlow().getGrantType(), params, getToken -> {

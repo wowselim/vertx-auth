@@ -15,6 +15,7 @@ package io.vertx.ext.auth.properties;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.authentication.AuthenticationProvider;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.authorization.*;
 import io.vertx.test.core.VertxTestBase;
 
@@ -35,6 +36,17 @@ public class PropertyFileAuthenticationTest extends VertxTestBase {
     JsonObject authInfo = new JsonObject().put("username", "tim").put("password", "sausages");
     authn.authenticate(authInfo, onSuccess(user -> {
       assertNotNull(user);
+      testComplete();
+    }));
+    await();
+  }
+
+  @Test
+  public void testInvalidAuthInfo() throws Exception {
+    JsonObject authInfo = new JsonObject();
+    authn.authenticate(authInfo, onFailure(thr -> {
+      assertNotNull(thr);
+      assertTrue(thr instanceof InvalidAuthInfoException);
       testComplete();
     }));
     await();

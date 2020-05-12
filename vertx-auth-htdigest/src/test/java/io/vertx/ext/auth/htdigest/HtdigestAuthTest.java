@@ -16,6 +16,7 @@
 package io.vertx.ext.auth.htdigest;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.test.core.VertxTestBase;
 import org.junit.Test;
 
@@ -46,6 +47,28 @@ public class HtdigestAuthTest extends VertxTestBase {
 
     authProvider.authenticate(authInfo, onSuccess(res -> {
       assertNotNull(res);
+      testComplete();
+    }));
+    await();
+  }
+
+  @Test
+  public void testInvalid() {
+    JsonObject authInfo = new JsonObject()
+      .put("method", "GET")
+      // missing username
+      .put("realm", "testrealm@host.com")
+      .put("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093")
+      .put("uri", "/dir/index.html")
+      .put("qop", "auth")
+      .put("nc", "00000001")
+      .put("cnonce", "0a4f113b")
+      .put("response", "6629fae49393a05397450978507c4ef1")
+      .put("opaque", "5ccc069c403ebaf9f0171e9517f40e41");
+
+    authProvider.authenticate(authInfo, onFailure(res -> {
+      assertNotNull(res);
+      assertTrue(res instanceof InvalidAuthInfoException);
       testComplete();
     }));
     await();

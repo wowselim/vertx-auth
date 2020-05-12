@@ -25,6 +25,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.HashingStrategy;
 import io.vertx.ext.auth.User;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.authorization.PermissionBasedAuthorization;
 import io.vertx.ext.auth.authorization.RoleBasedAuthorization;
 import io.vertx.ext.auth.impl.UserImpl;
@@ -33,6 +34,9 @@ import io.vertx.ext.mongo.MongoClient;
 
 import java.util.List;
 import java.util.Map;
+
+import static io.vertx.ext.auth.impl.AuthInfoUtil.getNonEmpty;
+import static io.vertx.ext.auth.impl.AuthInfoUtil.getNonNull;
 
 /**
  * An implementation of {@link MongoAuthentication}
@@ -52,10 +56,8 @@ public class MongoAuthenticationImpl implements MongoAuthentication {
   /**
    * Creates a new instance
    *
-   * @param mongoClient
-   *          the {@link MongoClient} to be used
-   * @param options
-   *          the options for configuring the new instance
+   * @param mongoClient the {@link MongoClient} to be used
+   * @param options     the options for configuring the new instance
    */
   public MongoAuthenticationImpl(MongoClient mongoClient, MongoAuthenticationOptions options) {
     this.mongoClient = mongoClient;
@@ -64,6 +66,7 @@ public class MongoAuthenticationImpl implements MongoAuthentication {
 
   /**
    * Provided for backward compatibility
+   *
    * @param mongoClient
    * @param legacyStrategy
    * @param options
@@ -77,37 +80,31 @@ public class MongoAuthenticationImpl implements MongoAuthentication {
 
   @Override
   public void authenticate(JsonObject authInfo, Handler<AsyncResult<User>> resultHandler) {
-    String username = authInfo.getString(options.getUsernameCredentialField());
-    String password = authInfo.getString(options.getPasswordCredentialField());
+    try {
+      String username = getNonEmpty(authInfo, options.getUsernameCredentialField());
+      String password = getNonNull(authInfo, options.getPasswordCredentialField());
 
-    // Null username is invalid
-    if (username == null) {
-      resultHandler.handle((Future.failedFuture("Username must be set for authentication.")));
-      return;
-    }
-    if (password == null) {
-      resultHandler.handle((Future.failedFuture("Password must be set for authentication.")));
-      return;
-    }
-    AuthToken token = new AuthToken(username, password);
+      AuthToken token = new AuthToken(username, password);
 
-    JsonObject query = createQuery(username);
-    mongoClient.find(options.getCollectionName(), query, res -> {
+      JsonObject query = createQuery(username);
+      mongoClient.find(options.getCollectionName(), query, res -> {
 
-      try {
-        if (res.succeeded()) {
-          User user = handleSelection(res, token);
-          resultHandler.handle(Future.succeededFuture(user));
-        } else {
-          resultHandler.handle(Future.failedFuture(res.cause()));
+        try {
+          if (res.succeeded()) {
+            User user = handleSelection(res, token);
+            resultHandler.handle(Future.succeededFuture(user));
+          } else {
+            resultHandler.handle(Future.failedFuture(res.cause()));
+          }
+        } catch (Exception e) {
+          log.warn(e);
+          resultHandler.handle(Future.failedFuture(e));
         }
-      } catch (Exception e) {
-        log.warn(e);
-        resultHandler.handle(Future.failedFuture(e));
-      }
+      });
 
-    });
-
+    } catch (InvalidAuthInfoException e) {
+      resultHandler.handle(Future.failedFuture(e));
+    }
   }
 
   /**
@@ -127,32 +124,31 @@ public class MongoAuthenticationImpl implements MongoAuthentication {
    * @param authToken
    * @return
    */
-  private User handleSelection(AsyncResult<List<JsonObject>> resultList, AuthToken authToken)
-      throws Exception {
+  private User handleSelection(AsyncResult<List<JsonObject>> resultList, AuthToken authToken) throws Exception {
     switch (resultList.result().size()) {
-    case 0: {
-      String message = "No account found for user [" + authToken.username + "]";
-      // log.warn(message);
-      throw new Exception(message);
-    }
-    case 1: {
-      JsonObject json = resultList.result().get(0);
-      User user = createUser(json);
-      if (examinePassword(user, json.getString(options.getPasswordCredentialField()), authToken.password))
-        return user;
-      else {
-        String message = "Invalid username/password [" + authToken.username + "]";
+      case 0: {
+        String message = "No account found for user [" + authToken.username + "]";
         // log.warn(message);
         throw new Exception(message);
       }
-    }
-    default: {
-      // More than one row returned!
-      String message = "More than one user row found for user [" + authToken.username + "( "
+      case 1: {
+        JsonObject json = resultList.result().get(0);
+        User user = createUser(json);
+        if (examinePassword(user, json.getString(options.getPasswordCredentialField()), authToken.password))
+          return user;
+        else {
+          String message = "Invalid username/password [" + authToken.username + "]";
+          // log.warn(message);
+          throw new Exception(message);
+        }
+      }
+      default: {
+        // More than one row returned!
+        String message = "More than one user row found for user [" + authToken.username + "( "
           + resultList.result().size() + " )]. Usernames must be unique.";
-      // log.warn(message);
-      throw new Exception(message);
-    }
+        // log.warn(message);
+        throw new Exception(message);
+      }
     }
   }
 

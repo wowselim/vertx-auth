@@ -22,6 +22,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.HashingStrategy;
 import io.vertx.ext.auth.User;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.htpasswd.HtpasswdAuth;
 import io.vertx.ext.auth.htpasswd.HtpasswdAuthOptions;
 import io.vertx.ext.auth.htpasswd.impl.hash.Plaintext;
@@ -31,6 +32,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static io.vertx.ext.auth.impl.AuthInfoUtil.*;
 
 /**
  * An implementation of {@link HtpasswdAuth}
@@ -65,24 +68,22 @@ public class HtpasswdAuthImpl implements HtpasswdAuth {
 
   @Override
   public void authenticate(JsonObject authInfo, Handler<AsyncResult<User>> resultHandler) {
-    String username = authInfo.getString("username");
-    String password = authInfo.getString("password");
+    try {
+      String username = getNonEmpty(authInfo, "username");
+      String password = getNonNull(authInfo, "password");
 
-    // Null or empty username is invalid
-    if (username == null || username.length() == 0) {
-      resultHandler.handle((Future.failedFuture("Username must be set for authentication.")));
-      return;
-    }
+      if (!htUsers.containsKey(username)) {
+        resultHandler.handle((Future.failedFuture("Unknown username.")));
+        return;
+      }
 
-    if (!htUsers.containsKey(username)) {
-      resultHandler.handle((Future.failedFuture("Unknown username.")));
-      return;
-    }
-
-    if (strategy.verify(htUsers.get(username), password)) {
-      resultHandler.handle(Future.succeededFuture(new UserImpl(new JsonObject().put("username", username))));
-    } else {
-      resultHandler.handle(Future.failedFuture("Bad response"));
+      if (strategy.verify(htUsers.get(username), password)) {
+        resultHandler.handle(Future.succeededFuture(new UserImpl(new JsonObject().put("username", username))));
+      } else {
+        resultHandler.handle(Future.failedFuture("Bad response"));
+      }
+    } catch (InvalidAuthInfoException e) {
+      resultHandler.handle(Future.failedFuture(e));
     }
   }
 }

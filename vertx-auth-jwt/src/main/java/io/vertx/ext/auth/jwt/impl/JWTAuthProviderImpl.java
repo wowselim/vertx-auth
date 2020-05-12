@@ -35,6 +35,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.KeyStoreOptions;
+import io.vertx.ext.auth.authentication.InvalidAuthInfoException;
 import io.vertx.ext.auth.authorization.PermissionBasedAuthorization;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.User;
@@ -43,6 +44,8 @@ import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.jwt.JWK;
 import io.vertx.ext.jwt.JWT;
 import io.vertx.ext.jwt.JWTOptions;
+
+import static io.vertx.ext.auth.impl.AuthInfoUtil.getNonEmpty;
 
 /**
  * @author Paulo Lopes
@@ -106,7 +109,7 @@ public class JWTAuthProviderImpl implements JWTAuth {
   @Override
   public void authenticate(JsonObject authInfo, Handler<AsyncResult<User>> resultHandler) {
     try {
-      final JsonObject payload = jwt.decode(authInfo.getString("jwt"));
+      final JsonObject payload = jwt.decode(getNonEmpty(authInfo, "jwt"));
 
       if (jwt.isExpired(payload, jwtOptions)) {
         resultHandler.handle(Future.failedFuture("Expired JWT token."));

@@ -71,3 +71,19 @@ Set the provider userInfo resource path
 |[[validateIssuer]]`@validateIssuer`|`Boolean`|-
 |===
 
+[[Oauth2AuthInfo]]
+== Oauth2AuthInfo
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[accessToken]]`@accessToken`|`String`|-
+|[[code]]`@code`|`String`|-
+|[[empty]]`@empty`|`Boolean`|-
+|[[password]]`@password`|`String`|-
+|[[redirectUri]]`@redirectUri`|`String`|-
+|[[username]]`@username`|`String`|-
+|===
+
